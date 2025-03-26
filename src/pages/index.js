@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import axiosInstance from '@/utils/axios';
 import { showToastMessage } from '@/utils/helpers';
+import Head from 'next/head';
 
 const Home = () => {
 
@@ -34,13 +35,16 @@ const Home = () => {
         showToastMessage('User successfully logged in', 'success')
       })
       .catch((error) => {
-        const data = error.response.data
-        showToastMessage(data.message || 'Something went wrong', 'error')
+        const data = error?.response?.data
+        showToastMessage(data?.message || 'Something went wrong', 'error')
       })
   }
 
   return (
     <div className='flex flex-col w-full h-screen items-center justify-center bg-[#f2f2f2] lg:px-0 md:px-6 px-4'>
+      <Head>
+        <title>Login | Simple Auth</title>
+      </Head>
 
       <form autoComplete='off' onSubmit={handleSubmit} className='flex flex-col lg:gap-4 gap-2 lg:w-96 w-full mx-auto bg-white rounded-lg p-6'>
 
