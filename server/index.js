@@ -3,6 +3,7 @@ const express = require('express')
 const cors = require('cors')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const compression = require('compression')
 
 const { todosRouter } = require('./todos')
 
@@ -30,6 +31,8 @@ app.use(cors())
 
 app.use(loggerMiddleware);
 
+app.use(compression())
+
 app.use('/todos', authenticateToken, todosRouter)
 
 app.use(express.json())
@@ -51,7 +54,7 @@ app.post("/login", async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ message: "Invalid credentials or user not found" });
     }
-    const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "1m" });
+    const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "1h" });
     res.json({ token });
 });
 
