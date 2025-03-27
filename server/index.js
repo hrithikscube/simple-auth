@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt')
 const compression = require('compression')
 
 const { todosRouter } = require('./todos')
+const validator = require('validatorjs')
 
 const app = express()
 
@@ -43,19 +44,48 @@ app.get('/', (req, res) => {
 
 app.post("/register", async (req, res) => {
     const { username, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    users.push({ username, password: hashedPassword });
-    res.json({ message: "User successfully registered" });
+    const thisValidator = new validator({ username: username, password: password }, { username: 'required|email|max:150', password: 'required|min:8|max:12' })
+
+    if (thisValidator.fails()) {
+        const fieldErrors = {};
+
+        /* eslint-disable */
+        for (const key in thisValidator.errors.errors) {
+            fieldErrors[key] = thisValidator.errors.errors[key][0];
+        }
+        res.status(400).json({ fieldErrors })
+    }
+    else {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        users.push({ username, password: hashedPassword });
+        res.json({ message: "User successfully registered" });
+    }
+
 });
 
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
-    const user = users.find(u => u.username === username);
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ message: "Invalid credentials or user not found" });
+    const thisValidator = new validator({ username: username, password: password }, { username: 'required|email|max:150', password: 'required|min:8|max:12' })
+
+    if (thisValidator.fails()) {
+        const fieldErrors = {};
+
+        /* eslint-disable */
+        for (const key in thisValidator.errors.errors) {
+            fieldErrors[key] = thisValidator.errors.errors[key][0];
+        }
+        res.status(400).json({ fieldErrors })
     }
-    const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.json({ token });
+    else {
+        const user = users.find(u => u.username === username);
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ message: "Invalid credentials or user not found" });
+        }
+        const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "1h" });
+        res.json({ token });
+    }
+
+
 });
 
 app.listen(3333, () => {
